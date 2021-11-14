@@ -4,20 +4,14 @@ declare(strict_types=1);
 
 function squareOfSum(int $max): int
 {
-    $result = 0;
-    for($number=1;$number<=$max;$number++){
-        $result += $number;
-    }
-    return $result * $result;
+    $sum = $max * (1 + $max) / 2;
+
+    return $sum * $sum;
 }
 
 function sumOfSquares(int $max): int
 {
-    $result = 0;
-    for($number=1;$number<=$max;$number++){
-        $result += $number * $number;
-    }
-    return $result;
+    return $max * ($max + 1) * (2 * $max + 1) / 6;
 }
 
 function difference(int $max): int
