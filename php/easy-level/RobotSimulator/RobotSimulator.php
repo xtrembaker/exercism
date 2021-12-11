@@ -26,102 +26,54 @@ declare(strict_types=1);
 
 class Robot
 {
-    public const DIRECTION_NORTH = 'north';
-    public const DIRECTION_EAST = 'east';
-    public const DIRECTION_SOUTH = 'south';
-    public const DIRECTION_WEST = 'west';
+    public const
+        DIRECTION_NORTH = [0, 1],
+        DIRECTION_EAST = [1, 0],
+        DIRECTION_SOUTH = [0, -1],
+        DIRECTION_WEST = [-1, 0];
 
-    private array $directions = [
-        self::DIRECTION_NORTH,
-        self::DIRECTION_EAST,
-        self::DIRECTION_SOUTH,
-        self::DIRECTION_WEST
-    ];
-    /**
-     *
-     * @var int[]
-     */
-    public array $position;
+    public array $position, $direction;
 
-    /**
-     *
-     * @var string
-     */
-    public $direction;
-
-    public function __construct(array $position, string $direction)
+    public function __construct(array $position, array $direction)
     {
+        assert(count($position) == 2);
         $this->position = $position;
         $this->direction = $direction;
-        while($direction !== current($this->directions)){
-            next($this->directions);
+    }
+
+    public function turnRight(): Robot
+    {
+        [$x, $y] = $this->direction;
+        $this->direction = [$y, -$x];
+        return $this;
+    }
+
+    public function turnLeft(): Robot
+    {
+        [$x, $y] = $this->direction;
+        $this->direction = [-$y, $x];
+        return $this;
+    }
+
+    public function advance(): Robot
+    {
+        $this->position[0] += $this->direction[0];
+        $this->position[1] += $this->direction[1];
+        return $this;
+    }
+
+    public function instructions(string $steps): Robot
+    {
+        if (!preg_match('/^[LRA]*$/', $steps)) {
+            throw new InvalidArgumentException('Instruction set must only contains L, R or A.');
         }
-    }
-
-    public function turnRight(): self
-    {
-        if(next($this->directions) === false) reset($this->directions);
-        $this->direction = current($this->directions);
-        return $this;
-    }
-
-    public function turnLeft(): self
-    {
-        if(prev($this->directions) === false) end($this->directions);
-        $this->direction = current($this->directions);
-        return $this;
-    }
-
-    public function advance(): self
-    {
-        $position = Position::createFromArray($this->position);
-        $this->position = $position->moveForward($this->direction)->toArray();
-        return $this;
-    }
-
-    public function instructions(string $instructions): void
-    {
-        foreach(str_split($instructions) as $instruction){
-            try {
-                match ($instruction) {
-                    'R' => $this->turnRight(),
-                    'L' => $this->turnLeft(),
-                    'A' => $this->advance()
-                };
-            }catch (UnhandledMatchError){
-                throw new InvalidArgumentException($instruction);
-            }
+        foreach (str_split($steps) as $step) {
+            match ($step) {
+                'R' => $this->turnRight(),
+                'L' => $this->turnLeft(),
+                'A' => $this->advance()
+            };
         }
-    }
-}
-
-class Position{
-
-    private function __construct(
-        private int $x,
-        private int $y,
-    )
-    {
-    }
-
-    public static function createFromArray(array $position): self
-    {
-        return new Position($position[0], $position[1]);
-    }
-
-
-    public function moveForward($direction): self
-    {
-        return match($direction){
-            'north' => new Position($this->x, $this->y + 1),
-            'east' => new Position($this->x + 1, $this->y),
-            'south' => new Position($this->x, $this->y - 1),
-            'west' => new Position($this->x - 1, $this->y),
-        };
-    }
-
-    public function toArray(): array
-    {
-        return [$this->x, $this->y];
+        return $this;
     }
 }
